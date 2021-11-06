@@ -11,7 +11,7 @@ def kodi_pipeline(drone_arch, base_version):
     return {
         "kind": "pipeline",
         "type": "docker",
-        "name": "build_kodi",
+        "name": "build_kodi_%s" % drone_arch,
         "platform": {
             "os": "linux",
             "arch": drone_arch,
