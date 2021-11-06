@@ -1,8 +1,9 @@
 def main(ctx):
-    return kodi_pipeline("arm64")
+    base_version = "2:19.1+dfsg2-2"
+    return kodi_pipeline("arm64", base_version)
 
 
-def kodi_pipeline(drone_arch):
+def kodi_pipeline(drone_arch, base_version):
     docker_img = "ghcr.io/sigmaris/kodibuilder:bullseye"
     return {
         "kind": "pipeline",
@@ -34,7 +35,7 @@ def kodi_pipeline(drone_arch):
                     "cd ..",
                     "mkdir kodi-build",
                     "cd kodi-build",
-                    "../builder-src/build_kodi.py",
+                    "../builder-src/build_kodi.py %s" % base_version,
                 ],
             },
 
