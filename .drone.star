@@ -38,7 +38,7 @@ def kodi_pipeline(drone_arch, base_version):
                     "cd ..",
                     "mkdir kodi-build",
                     "cd kodi-build",
-                    "../builder-src/build_kodi.py %s" % base_version,
+                    "../builder-src/build_kodi.sh '%s'" % base_version,
                 ],
             },
 
