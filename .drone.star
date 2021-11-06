@@ -1,6 +1,9 @@
 def main(ctx):
     base_version = "2:19.1+dfsg2-2"
-    return kodi_pipeline("arm64", base_version)
+    return [
+        kodi_pipeline("arm64", base_version),
+        kodi_pipeline("arm", base_version),
+    ]
 
 
 def kodi_pipeline(drone_arch, base_version):
