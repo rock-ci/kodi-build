@@ -1,9 +1,13 @@
 def main(ctx):
     base_version = "2:19.1+dfsg2-2"
-    return [
-        kodi_pipeline("arm64", base_version),
-        kodi_pipeline("arm", base_version),
-    ]
+    dev_url = "https://${FILEBUCKET_SERVER}/filebucket/"
+    pipelines = []
+    if "ci: addons" in ctx.build.message:
+        pipelines.append(addons_pipeline("arm64", base_version, dev_url, "build_visualization_addons", "visualization.*"))
+    if "ci: kodi" in ctx.build.message:
+        pipelines.append(kodi_pipeline("arm64", base_version))
+        pipelines.append(kodi_pipeline("arm", base_version))
+    return pipelines
 
 
 def kodi_pipeline(drone_arch, base_version):
@@ -56,9 +60,6 @@ def kodi_pipeline(drone_arch, base_version):
                     "/drone/builder-src/upload_artifacts.sh",
                 ],
                 "depends_on": ["build_kodi"],
-                "when": {
-                    "event": {"exclude": "tag"},
-                },
             },
 
             # Upload artifacts to Github release for tag builds
@@ -84,4 +85,50 @@ def kodi_pipeline(drone_arch, base_version):
                 },
             },
         ]
+    }
+
+
+def addons_pipeline(drone_arch, base_version, dev_url, job_id, regex, deb_arch=None):
+    if not deb_arch:
+        deb_arch = drone_arch
+    docker_img = "ghcr.io/sigmaris/kodibuilder:bullseye"
+    return {
+        "kind": "pipeline",
+        "type": "docker",
+        "name": job_id,
+        "platform": {
+            "os": "linux",
+            "arch": drone_arch,
+        },
+        "workspace": {
+            "base": "/drone",
+            "path": "builder-src",
+        },
+        "trigger": {
+            "ref": [
+                "refs/heads/*",
+                "refs/tags/*",
+            ]
+        },
+        "clone": {
+            "depth": 1
+        },
+        "steps": [
+            # Retrieve source
+            {
+                "name": "grab_source",
+                "image": docker_img,
+                "environment": {
+                    "FILEBUCKET_USER": "drone.io",
+                    "FILEBUCKET_PASSWORD": {"from_secret": "FILEBUCKET_PASSWORD"},
+                    "FILEBUCKET_SERVER": {"from_secret": "FILEBUCKET_SERVER"},
+                },
+                "commands": [
+                    "cd ..",
+                    "mkdir kodi-build",
+                    "cd kodi-build",
+                    '../builder-src/grab_source.sh "%s" "%s" "%s"' % (base_version, dev_url, deb_arch),
+                ],
+            },
+        ],
     }

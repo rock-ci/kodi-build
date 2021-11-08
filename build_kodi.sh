@@ -3,21 +3,15 @@ set -euo pipefail
 BASE_VERSION="$1"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 
-
-if [[ -z "$BASE_VERSION" ]]
-then
-    echo "Usage: $0 <base version> [our revision override]"
-    exit 1
-fi
-after_epoch=${BASE_VERSION#*:}
-upstream_ver=${after_epoch%-*}
-debian_rev=${after_epoch##*-}
-our_rev="${2:-$debian_rev}"
+AFTER_EPOCH=${BASE_VERSION#*:}
+UPSTREAM_VER=${AFTER_EPOCH%-*}
+DEBIAN_REV=${AFTER_EPOCH##*-}
+OUR_REV="${2:-$DEBIAN_REV}"
 
 echo ""
-echo "Upstream version: $upstream_ver"
-echo "Debian revision:  $debian_rev"
-echo "Our revision      $our_rev"
+echo "Upstream version: $UPSTREAM_VER"
+echo "Debian revision:  $DEBIAN_REV"
+echo "Our revision      $OUR_REV"
 echo ""
 
 
@@ -27,7 +21,7 @@ echo "***********************"
 
 apt-get -y source "kodi=${BASE_VERSION}"
 
-cd "kodi-${upstream_ver}"
+cd "kodi-${UPSTREAM_VER}"
 
 
 echo "************************"
@@ -35,7 +29,7 @@ echo "** Patching changelog **"
 echo "************************"
 
 cat << EOF | tee debian/changelog.new
-kodi (10:${upstream_ver}-${our_rev}) unstable; urgency=medium
+kodi (10:${UPSTREAM_VER}-${OUR_REV}) unstable; urgency=medium
 
   * Use APP_RENDER_SYSTEM=gles instead of desktop OpenGL
 
@@ -63,6 +57,15 @@ do
     echo "* Applying $patchfile ..."
     patch -p1 < "$patchfile"
 done
+
+echo "*************************"
+echo "** Configuring package **"
+echo "*************************"
+
+debian/rules override_dh_auto_configure
+cd ..
+tar cjf kodi-${UPSTREAM_VER}-${OUR_REV}-config.tar.bz2 "kodi-${UPSTREAM_VER}"
+cd "kodi-${UPSTREAM_VER}"
 
 echo "**********************"
 echo "** Building package **"

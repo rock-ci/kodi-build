@@ -1,0 +1,13 @@
+commit fde1e31658498734d44e9af52f191da3d95ebd06
+Author: Hugh Cole-Baker <sigmaris@gmail.com>
+Date:   Sun May 23 12:27:33 2021 +0100
+
+    pin kodi-game repo to commit without rcheevos
+
+diff --git a/cmake/addons/bootstrap/repositories/binary-addons.txt b/cmake/addons/bootstrap/repositories/binary-addons.txt
+index 13f81596b1..c43c61581e 100644
+--- a/cmake/addons/bootstrap/repositories/binary-addons.txt
++++ b/cmake/addons/bootstrap/repositories/binary-addons.txt
+@@ -1 +1 @@
+-binary-addons https://github.com/xbmc/repo-binary-addons.git Matrix
++binary-addons https://github.com/kodi-game/repo-binary-addons.git bec1c81da5228b4cdb1033be2ac764ddb9d1d9ba
