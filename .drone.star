@@ -2,15 +2,17 @@ def main(ctx):
     base_version = "2:19.1+dfsg2-2"
     dev_url = "https://${FILEBUCKET_SERVER}/filebucket/"
     pipelines = []
-    if "ci: addons" in ctx.build.message:
-        pipelines.append(addons_pipeline("arm64", base_version, dev_url, "build_visualization_addons", "visualization.*"))
     if "ci: kodi" in ctx.build.message:
         pipelines.append(kodi_pipeline("arm64", base_version))
-        pipelines.append(kodi_pipeline("arm", base_version))
+        # pipelines.append(kodi_pipeline("arm", base_version, "armhf"))
+    if "ci: addons" in ctx.build.message:
+        pipelines.append(addons_pipeline("arm64", base_version, dev_url, "build_visualization_addons", "visualization.*"))
     return pipelines
 
 
-def kodi_pipeline(drone_arch, base_version):
+def kodi_pipeline(drone_arch, base_version, deb_arch=None):
+    if not deb_arch:
+        deb_arch = drone_arch
     docker_img = "ghcr.io/sigmaris/kodibuilder:bullseye"
     return {
         "kind": "pipeline",
@@ -38,11 +40,15 @@ def kodi_pipeline(drone_arch, base_version):
             {
                 "name": "build_kodi",
                 "image": docker_img,
+                "environment": {
+                    "BASE_VERSION": base_version,
+                    "DEB_ARCH": deb_arch,
+                },
                 "commands": [
                     "cd ..",
                     "mkdir kodi-build",
                     "cd kodi-build",
-                    "../builder-src/build_kodi.sh '%s'" % base_version,
+                    "../builder-src/build_kodi.sh",
                 ],
             },
 
@@ -122,12 +128,15 @@ def addons_pipeline(drone_arch, base_version, dev_url, job_id, regex, deb_arch=N
                     "FILEBUCKET_USER": "drone.io",
                     "FILEBUCKET_PASSWORD": {"from_secret": "FILEBUCKET_PASSWORD"},
                     "FILEBUCKET_SERVER": {"from_secret": "FILEBUCKET_SERVER"},
+                    "BASE_VERSION": base_version,
+                    "DEV_URL": dev_url,
+                    "DEB_ARCH": deb_arch,
                 },
                 "commands": [
                     "cd ..",
                     "mkdir kodi-build",
                     "cd kodi-build",
-                    '../builder-src/grab_source.sh "%s" "%s" "%s"' % (base_version, dev_url, deb_arch),
+                    "../builder-src/grab_source.sh",
                 ],
             },
         ],

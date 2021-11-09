@@ -1,17 +1,17 @@
 #!/bin/bash
 set -euo pipefail
-BASE_VERSION="$1"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 
 AFTER_EPOCH=${BASE_VERSION#*:}
 UPSTREAM_VER=${AFTER_EPOCH%-*}
 DEBIAN_REV=${AFTER_EPOCH##*-}
-OUR_REV="${2:-$DEBIAN_REV}"
+: "${OUR_REV:=$DEBIAN_REV}"
 
 echo ""
 echo "Upstream version: $UPSTREAM_VER"
 echo "Debian revision:  $DEBIAN_REV"
 echo "Our revision      $OUR_REV"
+echo "Debian arch:      $DEB_ARCH"
 echo ""
 
 
@@ -64,7 +64,7 @@ echo "*************************"
 
 debian/rules override_dh_auto_configure
 cd ..
-tar cjf kodi-${UPSTREAM_VER}-${OUR_REV}-config.tar.bz2 "kodi-${UPSTREAM_VER}"
+tar cjf kodi-config_${UPSTREAM_VER}-${OUR_REV}_${DEB_ARCH}.tar.bz2 "kodi-${UPSTREAM_VER}"
 cd "kodi-${UPSTREAM_VER}"
 
 echo "**********************"

@@ -1,8 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-BASE_VERSION="$1"
-DEV_URL="$2"
-DEB_ARCH="$3"
 
 AFTER_EPOCH=${BASE_VERSION#*:}
 UPSTREAM_VER=${AFTER_EPOCH%-*}
@@ -13,8 +10,9 @@ echo "***************************"
 echo "** Downloading artifacts **"
 echo "***************************"
 
+# TODO: separate tar.bz2 by arch
 FILE_VER="${UPSTREAM_VER}-${OUR_REV}"
-for file_to_get in kodi-${FILE_VER}-config.tar.bz2 kodi-addons-dev_${FILE_VER}_${DEB_ARCH}.deb kodi-addons-dev-common_${FILE_VER}_${DEB_ARCH}.deb
+for file_to_get in kodi-config_${FILE_VER}_${DEB_ARCH}.tar.bz2 kodi-addons-dev_${FILE_VER}_${DEB_ARCH}.deb kodi-addons-dev-common_${FILE_VER}_${DEB_ARCH}.deb
 do
     echo "* $file_to_get"
     curl \
