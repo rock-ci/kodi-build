@@ -1,16 +1,13 @@
 #!/bin/bash
 set -euo pipefail
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 
-AFTER_EPOCH=${BASE_VERSION#*:}
-UPSTREAM_VER=${AFTER_EPOCH%-*}
-DEBIAN_REV=${AFTER_EPOCH##*-}
-OUR_REV="${4:-$DEBIAN_REV}"
+source "${SCRIPT_DIR}/lib/versions.sh"
 
 echo "***************************"
 echo "** Downloading artifacts **"
 echo "***************************"
 
-# TODO: separate tar.bz2 by arch
 FILE_VER="${UPSTREAM_VER}-${OUR_REV}"
 for file_to_get in kodi-config_${FILE_VER}_${DEB_ARCH}.tar.bz2 kodi-addons-dev_${FILE_VER}_${DEB_ARCH}.deb kodi-addons-dev-common_${FILE_VER}_${DEB_ARCH}.deb
 do
