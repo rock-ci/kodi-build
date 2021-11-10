@@ -77,8 +77,8 @@ do
 		echo "*** Building binary addon $D ***"
 		echo "********************************"
 
-    # Debian renamed this package to make it plural:
-    sed -i -e "s/kodi-addon-dev/kodi-addons-dev/g" debian/control
+		# Debian renamed this package to make it plural:
+		sed -i -e "s/kodi-addon-dev/kodi-addons-dev/g" debian/control
 
 		VERSION_FILE="addon.xml.in"
 		[[ ! -f "${D}/addon.xml.in" ]] && VERSION_FILE="addon.xml"
