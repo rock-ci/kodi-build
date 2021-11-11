@@ -126,7 +126,7 @@ def kodi_pipeline(drone_arch, base_version, deb_arch=None):
                     "cd /drone/kodi-build",
                     "/drone/builder-src/upload_artifacts.sh *.tar.bz2",
                 ],
-                "depends_on": ["build_kodi"],
+                "depends_on": ["prepare_kodi"],
             },
 
             # Build Kodi
@@ -141,6 +141,7 @@ def kodi_pipeline(drone_arch, base_version, deb_arch=None):
                     "cd /drone/kodi-build",
                     "../builder-src/build_kodi.sh",
                 ],
+                "depends_on": ["publish_kodi_config"],
             },
 
             # Publish kodi build artifacts to filebucket
@@ -246,8 +247,10 @@ def git_addons_pipeline(drone_arch, base_version, artifact_prefix, job_id, regex
                     "cd /drone/kodi-build",
                     "../builder-src/build_git_addons.sh",
                 ],
+                "depends_on": ["grab_source"],
             },
 
+            # Publish addons to filebucket
             {
                 "name": "publish_addons",
                 "image": docker_img,
@@ -256,6 +259,30 @@ def git_addons_pipeline(drone_arch, base_version, artifact_prefix, job_id, regex
                     "cd /drone/kodi-build",
                     "/drone/builder-src/upload_artifacts.sh *.deb",
                 ],
+                "depends_on": ["build_addons"],
+            },
+
+            # Upload artifacts to Github release for tag builds
+            {
+                "name": "release_addons",
+                "image": "ghcr.io/sigmaris/drone-github-release:latest",
+                "settings": {
+                    "api_key": {
+                        "from_secret": "github_token",
+                    },
+                    "files": [
+                        "/drone/kodi-build/*.deb",
+                    ],
+                    "checksum": [
+                        "md5",
+                        "sha1",
+                        "sha256",
+                    ]
+                },
+                "depends_on": ["build_addons"],
+                "when": {
+                    "event": "tag",
+                },
             },
         ],
     }
@@ -303,6 +330,7 @@ def deb_addons_pipeline(drone_arch, job_id, packages):
             }
             for (addon_name, addon_version) in packages
         ] + [
+            # Publish addons to filebucket
             {
                 "name": "publish_addons",
                 "image": docker_img,
@@ -312,6 +340,29 @@ def deb_addons_pipeline(drone_arch, job_id, packages):
                     "/drone/builder-src/upload_artifacts.sh *.deb",
                 ],
                 "depends_on": ["build_%s" % addon_name for (addon_name, _version) in packages],
-            }
+            },
+
+            # Upload artifacts to Github release for tag builds
+            {
+                "name": "release_addons",
+                "image": "ghcr.io/sigmaris/drone-github-release:latest",
+                "settings": {
+                    "api_key": {
+                        "from_secret": "github_token",
+                    },
+                    "files": [
+                        "/drone/kodi-build/*.deb",
+                    ],
+                    "checksum": [
+                        "md5",
+                        "sha1",
+                        "sha256",
+                    ]
+                },
+                "depends_on": ["build_%s" % addon_name for (addon_name, _version) in packages],
+                "when": {
+                    "event": "tag",
+                },
+            },
         ],
     }

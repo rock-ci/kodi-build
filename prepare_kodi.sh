@@ -44,6 +44,12 @@ echo "********************************"
 sed -i -e "s/-DAPP_RENDER_SYSTEM=gl /-DAPP_RENDER_SYSTEM=gles /g" debian/rules
 grep APP_RENDER_SYSTEM=gles debian/rules
 
+echo "****************************"
+echo "** Workaround bug #999482 **"
+echo "****************************"
+
+sed -i -e "s#usr/share/kodi/cmake/\*\.cmake#usr/share/kodi/cmake/AddOptions.cmake\nusr/share/kodi/cmake/AddonHelpers.cmake\nusr/share/kodi/cmake/ArchSetup.cmake\nusr/share/kodi/cmake/CheckCommits.cmake\nusr/share/kodi/cmake/CheckTargetPlatform.cmake\nusr/share/kodi/cmake/GenerateVersionedFiles.cmake\nusr/share/kodi/cmake/GeneratorSetup.cmake\nusr/share/kodi/cmake/HandleDepends.cmake\nusr/share/kodi/cmake/Macros.cmake\nusr/share/kodi/cmake/PathSetup.cmake\nusr/share/kodi/cmake/PrepareEnv.cmake\nusr/share/kodi/cmake/ProjectMacros.cmake#" debian/kodi-addons-dev-common.install
+echo usr/share/kodi/cmake/KodiConfig.cmake >> debian/kodi-addons-dev.install
 
 echo "***************************"
 echo "** Applying kodi patches **"
