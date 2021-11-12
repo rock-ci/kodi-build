@@ -6,10 +6,11 @@ source "${SCRIPT_DIR}/lib/versions.sh"
 
 : "${DISTRO_CODENAME:=$(lsb_release -cs)}"
 
-ADDONS_LOG_DIR="$(pwd)/addons_logs"
+WORK_DIR="$(pwd)"
+ADDONS_LOG_DIR="${WORK_DIR}/addons_logs"
 mkdir -p "$ADDONS_LOG_DIR"
 
-KODI_SOURCE_DIR="$(pwd)/kodi-${UPSTREAM_VER}"
+KODI_SOURCE_DIR="${WORK_DIR}/kodi-${UPSTREAM_VER}"
 cd "${KODI_SOURCE_DIR}/obj-${ARCH_TRIPLET}"
 ADDON_DEPENDS_PATH="$(pwd)/build"
 
@@ -104,3 +105,6 @@ echo ""
 echo "Addons built OK: ${ADDONS_BUILD_OK[@]}"
 echo ""
 echo "Addons which failed to build: ${ADDONS_BUILD_FAILED[@]}"
+
+# Move build products to original working dir
+mv *.deb *.buildinfo *.changes "${WORK_DIR}"

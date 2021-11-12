@@ -230,7 +230,6 @@ def git_addons_pipeline(drone_arch, base_version, artifact_prefix, job_id, regex
                     "mkdir kodi-build",
                     "cd kodi-build",
                     "../builder-src/grab_source.sh",
-                    "apt-get -y -u -V install ./kodi-addons-dev_*.deb ./kodi-addons-dev-common_*.deb",
                 ],
             },
 
@@ -245,6 +244,7 @@ def git_addons_pipeline(drone_arch, base_version, artifact_prefix, job_id, regex
                 ),
                 "commands": [
                     "cd /drone/kodi-build",
+                    "apt-get -y -u -V install ./kodi-addons-dev_*.deb ./kodi-addons-dev-common_*.deb git libbz2-dev libgles2-mesa-dev libglm-dev libmodplug-dev libwavpack-dev lsb-release",
                     "../builder-src/build_git_addons.sh",
                 ],
                 "depends_on": ["grab_source"],

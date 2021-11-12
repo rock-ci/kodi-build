@@ -23,9 +23,9 @@ echo "************************"
 cat << EOF | tee debian/changelog.new
 ${ADDON_NAME} (10:${UPSTREAM_VER}-${OUR_REV}) unstable; urgency=medium
 
-* Use APP_RENDER_SYSTEM=gles instead of desktop OpenGL
+  * Use APP_RENDER_SYSTEM=gles instead of desktop OpenGL
 
--- Hugh Cole-Baker <sigmaris@gmail.com>  $(date '+%a, %d %b %Y %H:%M:%S %z')
+ -- Hugh Cole-Baker <sigmaris@gmail.com>  $(date '+%a, %d %b %Y %H:%M:%S %z')
 
 EOF
 cat debian/changelog >> debian/changelog.new
