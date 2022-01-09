@@ -244,7 +244,7 @@ def git_addons_pipeline(drone_arch, base_version, artifact_prefix, job_id, regex
                 ),
                 "commands": [
                     "cd /drone/kodi-build",
-                    "apt-get -y -u -V install ./kodi-addons-dev_*.deb ./kodi-addons-dev-common_*.deb git libbz2-dev libgles2-mesa-dev libglm-dev libmodplug-dev libwavpack-dev lsb-release",
+                    "apt-get -y -u -V install ./kodi-addons-dev_*.deb ./kodi-addons-dev-common_*.deb git libbz2-dev libgles2-mesa-dev libglm-dev libmodplug-dev libpcap-dev libprojectm-dev libwavpack-dev libxi-dev lsb-release python2",
                     "../builder-src/build_git_addons.sh",
                 ],
                 "depends_on": ["grab_source"],
