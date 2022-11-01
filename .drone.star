@@ -20,7 +20,7 @@ DEB_VISUALIZATIONS = (
 )
 
 def main(ctx):
-    base_version = "2:19.3+dfsg1-1"
+    base_version = "2:19.4+dfsg2-2~bpo11+1"
     artifact_prefix = "filebucket/"
     pipelines = []
     arch = "arm64"

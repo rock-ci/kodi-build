@@ -1,0 +1,33 @@
+From 46a8ecdf8d653bdfaaeeae00dbe9ca646965f669 Mon Sep 17 00:00:00 2001
+From: Dom Cobley <popcornmix@gmail.com>
+Date: Thu, 6 Oct 2022 18:58:19 +0100
+Subject: [PATCH] VideoLayerBridgeDRMPRIME: Remove additional Release of
+ previous picture buffer
+
+Fixes: https://forum.kodi.tv/showthread.php?tid=361164&pid=3112854#pid3112854
+
+We are already releasing this buffer in CVideoLayerBridgeDRMPRIME::Acquire
+(and destructor).
+
+The early release here effectively means we are double buffering without blocking,
+and that results in removing video buffers that are currently being displayed
+leading to flickering
+---
+ .../VideoRenderers/HwDecRender/VideoLayerBridgeDRMPRIME.cpp   | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/VideoLayerBridgeDRMPRIME.cpp b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/VideoLayerBridgeDRMPRIME.cpp
+index b91a1705acdbb..4b8ee5afbb4f6 100644
+--- a/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/VideoLayerBridgeDRMPRIME.cpp
++++ b/xbmc/cores/VideoPlayer/VideoRenderers/HwDecRender/VideoLayerBridgeDRMPRIME.cpp
+@@ -259,10 +259,6 @@ void CVideoLayerBridgeDRMPRIME::UpdateVideoPlane()
+   if (!m_buffer || !m_buffer->m_fb_id)
+     return;
+ 
+-  // release the buffer that is no longer presented on screen
+-  Release(m_prev_buffer);
+-  m_prev_buffer = nullptr;
+-
+   auto plane = m_DRM->GetVideoPlane();
+   m_DRM->AddProperty(plane, "FB_ID", m_buffer->m_fb_id);
+   m_DRM->AddProperty(plane, "CRTC_ID", m_DRM->GetCrtc()->GetCrtcId());
