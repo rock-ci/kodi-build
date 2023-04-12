@@ -1,0 +1,150 @@
+name: Build
+on:
+  - push
+env:
+  BASE_VERSION: "2:20.1+dfsg-1"
+jobs:
+  build_kodi:
+    name: Build Kodi
+    strategy:
+      matrix:
+        architecture:
+          - ARM64
+    runs-on:
+      - self-hosted
+      - linux
+      - "${{ matrix.architecture }}"
+    container: ghcr.io/sigmaris/kodibuilder:bookworm
+    env:
+      RUNNER_ARCH: "${{ matrix.architecture }}"
+    steps:
+      - name: Determine DEB_ARCH
+        run: |
+          if [[ "$RUNNER_ARCH" == "ARM" ]]; then
+            DEB_ARCH=armhf
+          elif [[ "$RUNNER_ARCH" == "x64" ]]; then
+            DEB_ARCH=amd64
+          else
+            DEB_ARCH="$(printf '%s' "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')"
+          fi
+          echo DEB_ARCH="$DEB_ARCH" >> $GITHUB_ENV
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          path: builder-src
+
+      - name: Prepare source code and configure Kodi
+        run: |
+          sudo apt-get update
+          mkdir kodi-build
+          cd kodi-build
+          ../builder-src/prepare_kodi.sh
+
+      - name: Upload configuration
+        uses: actions/upload-artifact@v3
+        with:
+          name: kodi-config
+          path: kodi-build/kodi-config_*.tar.bz2
+
+      - name: Compile and package Kodi
+        run: |
+          cd kodi-build
+          ../builder-src/build_kodi.sh
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: kodi-debs
+          path: kodi-build/*.deb
+
+  build_git_addons:
+    name: Build addons from Git
+    needs: build_kodi
+    strategy:
+      matrix:
+        architecture:
+          - ARM64
+        addons_regex:
+          - 'audiodecoder.* -audiodecoder.(fluidsynth|openmpt|sidplay)'
+          - 'screensaver.* -screensaver.(asteroids|biogenesis|greynetic|pingpong|pyro|shadertoy)'
+          - 'visualization.* -visualization.(fishbmc|pictureit|shadertoy|spectrum|waveform)'
+          - 'vfs.* -vfs.(libarchive|sftp)'
+          - '^game\.libretro$'
+          - '^game\.libretro\.[0-9].*'
+          - '^game\.libretro\.a.*'
+          - '^game\.libretro\.b.*'
+          - '^game\.libretro\.c.*'
+          - '^game\.libretro\.[d-e].*'
+          - '^game\.libretro\.f.*'
+          - '^game\.libretro\.[g-l].*'
+          - '^game\.libretro\.ma.*'
+          - '^game\.libretro\.m[b-z].*'
+          - '^game\.libretro\.n.*'
+          - '^game\.libretro\.o.*'
+          - '^game\.libretro\.p.*'
+          - '^game\.libretro\.[q-r].*'
+          - '^game\.libretro\.s.*'
+          - '^game\.libretro\.t.*'
+          - '^game\.libretro\.u.*'
+          - '^game\.libretro\.v.*'
+          - '^game\.libretro\.[w-z].*'
+    runs-on:
+      - self-hosted
+      - linux
+      - "${{ matrix.architecture }}"
+    container: ghcr.io/sigmaris/kodibuilder:bookworm
+    env:
+      RUNNER_ARCH: "${{ matrix.architecture }}"
+      ADDONS_REGEX: "${{ matrix.addons_regex }}"
+    steps:
+      - name: Determine DEB_ARCH and ARCH_TRIPLET
+        run: |
+          case $RUNNER_ARCH in
+            ARM64)
+              DEB_ARCH=arm64
+              ARCH_TRIPLET="aarch64-linux-gnu"
+              ;;
+            ARM)
+              DEB_ARCH=armhf
+              ARCH_TRIPLET="arm-linux-gnueabihf"
+              ;;
+            x64)
+              DEB_ARCH=amd64
+              ARCH_TRIPLET="x86_64-linux-gnu"
+              ;;
+            *)
+              echo "Unknown RUNNER_ARCH: $RUNNER_ARCH"
+              exit 1
+              ;;
+          esac
+          echo DEB_ARCH="$DEB_ARCH" >> $GITHUB_ENV
+          echo ARCH_TRIPLET="$ARCH_TRIPLET" >> $GITHUB_ENV
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          path: builder-src
+
+      - name: Create build directory
+        run: |
+          mkdir kodi-build
+          cd kodi-build
+
+      - name: Download all built artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Unpack config and install addons-dev packages
+        run: |
+          cd kodi-build
+          tar xjf ../artifacts/kodi-config/kodi-config_*_${DEB_ARCH}.tar.bz2
+          sudo apt-get -y -u -V install ../artifacts/kodi-debs/kodi-addons-dev_*.deb ../artifacts/kodi-debs/kodi-addons-dev-common_*.deb
+          ../builder-src/build_git_addons.sh
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: git-addon-debs
+          path: kodi-build/*.deb

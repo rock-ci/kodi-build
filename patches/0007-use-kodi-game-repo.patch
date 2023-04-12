@@ -9,5 +9,5 @@ index 13f81596b1..c43c61581e 100644
 --- a/cmake/addons/bootstrap/repositories/binary-addons.txt
 +++ b/cmake/addons/bootstrap/repositories/binary-addons.txt
 @@ -1 +1 @@
--binary-addons https://github.com/xbmc/repo-binary-addons.git Matrix
-+binary-addons https://github.com/kodi-game/repo-binary-addons.git 2baa302394c9ac88e4dd850bbcab43ee96ba1359
+-binary-addons https://github.com/xbmc/repo-binary-addons.git Nexus
++binary-addons https://github.com/kodi-game/repo-binary-addons.git Nexus

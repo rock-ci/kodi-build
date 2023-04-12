@@ -4,23 +4,23 @@ FILEBUCKET_ENV = {
     "FILEBUCKET_SERVER": {"from_secret": "FILEBUCKET_SERVER"},
 }
 DEB_SCREENSAVERS = (
-    ("asteroids", "2.6.0+ds1-2"),
-    ("biogenesis", "2.5.0-2"),
-    ("greynetic", "2.5.0+ds1-2"),
-    ("pingpong", "2.4.0+ds1-2"),
-    ("pyro", "3.3.0-2"),
-    ("shadertoy", "3.2.0+ds1-2"),
+    ("asteroids", "20.1.0+ds1-2"),
+    ("biogenesis", "20.1.0-2"),
+    ("greynetic", "20.1.0+ds1-2"),
+    ("pingpong", "20.1.0+ds1-2"),
+    ("pyro", "20.1.0-2"),
+    ("shadertoy", "20.1.0+ds1-2"),
 )
 DEB_VISUALIZATIONS = (
-    ("fishbmc", "6.3.0+ds1-2"),
-    ("pictureit", "3.4.0+ds1-3"),
-    ("shadertoy", "2.3.0+ds1-3"),
-    ("spectrum", "3.4.0+ds1-2"),
-    ("waveform", "4.4.0+ds1-2"),
+    ("fishbmc", "20.2.0+ds1-1"),
+    ("pictureit", "20.2.0+ds1-1"),
+    ("shadertoy", "20.3.0+ds1-1"),
+    ("spectrum", "20.2.0+ds1-1"),
+    ("waveform", "20.2.1+ds1-1"),
 )
 
 def main(ctx):
-    base_version = "2:19.4+dfsg2-2~bpo11+1"
+    base_version = "2:20.1+dfsg-1"
     artifact_prefix = "filebucket/"
     pipelines = []
     arch = "arm64"
@@ -78,7 +78,7 @@ def main(ctx):
 def kodi_pipeline(drone_arch, base_version, deb_arch=None):
     if not deb_arch:
         deb_arch = drone_arch
-    docker_img = "ghcr.io/sigmaris/kodibuilder:bullseye"
+    docker_img = "ghcr.io/sigmaris/kodibuilder:bookworm"
     return {
         "kind": "pipeline",
         "type": "docker",
@@ -192,7 +192,7 @@ def git_addons_pipeline(drone_arch, base_version, artifact_prefix, job_id, regex
         arch_triplet = "aarch64-linux-gnu"
     elif deb_arch == "armhf":
         arch_triplet = "arm-linux-gnueabihf"
-    docker_img = "ghcr.io/sigmaris/kodibuilder:bullseye"
+    docker_img = "ghcr.io/sigmaris/kodibuilder:bookworm"
     return {
         "kind": "pipeline",
         "type": "docker",
@@ -289,7 +289,7 @@ def git_addons_pipeline(drone_arch, base_version, artifact_prefix, job_id, regex
 
 
 def deb_addons_pipeline(drone_arch, job_id, packages):
-    docker_img = "ghcr.io/sigmaris/kodibuilder:bullseye"
+    docker_img = "ghcr.io/sigmaris/kodibuilder:bookworm"
     return {
         "kind": "pipeline",
         "type": "docker",
