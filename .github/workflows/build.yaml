@@ -73,7 +73,6 @@ jobs:
           - 'screensaver.* -screensaver.(asteroids|biogenesis|greynetic|pingpong|pyro|shadertoy)'
           - 'visualization.* -visualization.(fishbmc|pictureit|shadertoy|spectrum|waveform)'
           - 'vfs.* -vfs.(libarchive|sftp)'
-          - '^game\.libretro$'
           - '^game\.libretro\.[0-9].*'
           - '^game\.libretro\.a.*'
           - '^game\.libretro\.b.*'
@@ -132,15 +131,22 @@ jobs:
       - name: Create build directory
         run: |
           rm -rf kodi-build
-          mkdir kodi-build
+          mkdir -p kodi-build/artifacts
           cd kodi-build
 
-      - name: Download all built artifacts
+      - name: Download kodi-config artifact
         uses: actions/download-artifact@v3
         with:
-          path: artifacts
+          name: kodi-config
+          path: artifacts/kodi-config
 
-      - name: Unpack config and install addons-dev packages
+      - name: Download kodi-debs artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: kodi-debs
+          path: artifacts/kodi-debs
+
+      - name: Install dependencies and build addons
         run: |
           cd kodi-build
           tar xjf ../artifacts/kodi-config/kodi-config_*_${DEB_ARCH}.tar.bz2
