@@ -7,6 +7,7 @@ jobs:
   build_kodi:
     name: Build Kodi
     strategy:
+      fail-fast: false
       matrix:
         architecture:
           - ARM64
@@ -37,6 +38,7 @@ jobs:
       - name: Prepare source code and configure Kodi
         run: |
           sudo apt-get update
+          rm -rf kodi-build
           mkdir kodi-build
           cd kodi-build
           ../builder-src/prepare_kodi.sh
@@ -62,6 +64,7 @@ jobs:
     name: Build addons from Git
     needs: build_kodi
     strategy:
+      fail-fast: false
       matrix:
         architecture:
           - ARM64
@@ -128,6 +131,7 @@ jobs:
 
       - name: Create build directory
         run: |
+          rm -rf kodi-build
           mkdir kodi-build
           cd kodi-build
 
