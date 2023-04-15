@@ -60,6 +60,85 @@ jobs:
           name: kodi-debs
           path: kodi-build/*.deb
 
+  build_deb_addons:
+    name: Build Debian-packaged addons
+    needs: build_kodi
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: kodi-screensaver-asteroids
+            version: '20.1.0+ds1-2'
+            architecture: ARM64
+          - name: kodi-screensaver-biogenesis
+            version: '20.1.0-2'
+            architecture: ARM64
+          - name: kodi-screensaver-greynetic
+            version: '20.1.0+ds1-2'
+            architecture: ARM64
+          - name: kodi-screensaver-pingpong
+            version: '20.1.0+ds1-2'
+            architecture: ARM64
+          - name: kodi-screensaver-pyro
+            version: '20.1.0-2'
+            architecture: ARM64
+          - name: kodi-screensaver-shadertoy
+            version: '20.1.0+ds1-2'
+            architecture: ARM64
+          - name: kodi-visualization-fishbmc
+            version: '20.2.0+ds1-1'
+            architecture: ARM64
+          - name: kodi-visualization-pictureit
+            version: '20.2.0+ds1-1'
+            architecture: ARM64
+          - name: kodi-visualization-shadertoy
+            version: '20.3.0+ds1-1'
+            architecture: ARM64
+          - name: kodi-visualization-spectrum
+            version: '20.2.0+ds1-1'
+            architecture: ARM64
+          - name: kodi-visualization-waveform
+            version: '20.2.1+ds1-1'
+            architecture: ARM64
+    runs-on:
+      - self-hosted
+      - linux
+      - "${{ matrix.architecture }}"
+    container: ghcr.io/sigmaris/kodibuilder:bookworm
+    env:
+      RUNNER_ARCH: "${{ matrix.architecture }}"
+      ADDON_NAME: "${{ matrix.name }}"
+      BASE_VERSION: "${{ matrix.version }}"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          path: builder-src
+
+      - name: Create build directory
+        run: |
+          rm -rf kodi-build
+          mkdir -p kodi-build/artifacts
+          cd kodi-build
+
+      - name: Download kodi-debs artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: kodi-debs
+          path: artifacts/kodi-debs
+
+      - name: Install dependencies and build addons
+        run: |
+          cd kodi-build
+          sudo apt-get -y -u -V install ../artifacts/kodi-debs/kodi-addons-dev_*.deb ../artifacts/kodi-debs/kodi-addons-dev-common_*.deb
+          ../builder-src/build_deb_addon.sh
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v3
+        with:
+          name: deb-addons
+          path: kodi-build/*.deb
+
   build_git_addons:
     name: Build addons from Git
     needs: build_kodi

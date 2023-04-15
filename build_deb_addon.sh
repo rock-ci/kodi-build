@@ -16,6 +16,12 @@ apt source "${ADDON_NAME}=${BASE_VERSION}"
 
 cd "${ADDON_NAME}-${UPSTREAM_VER}"
 
+echo "**********************************"
+echo "** Patching OpenGL -> OpenGL ES **"
+echo "**********************************"
+
+sed -i -e "s/libgl1-mesa-dev/libgles2-mesa-dev/g" debian/control
+
 echo "************************"
 echo "** Patching changelog **"
 echo "************************"
