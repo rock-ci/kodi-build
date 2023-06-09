@@ -2,7 +2,7 @@ commit fde1e31658498734d44e9af52f191da3d95ebd06
 Author: Hugh Cole-Baker <sigmaris@gmail.com>
 Date:   Sun May 23 12:27:33 2021 +0100
 
-    pin kodi-game repo to commit without rcheevos
+    Use kodi-game repo for binary addons
 
 diff --git a/cmake/addons/bootstrap/repositories/binary-addons.txt b/cmake/addons/bootstrap/repositories/binary-addons.txt
 index 13f81596b1..c43c61581e 100644
