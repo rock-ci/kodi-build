@@ -10,26 +10,25 @@ jobs:
       fail-fast: false
       matrix:
         architecture:
-          - ARM64
+          - armhf
+          - arm64
+        include:
+          - architecture: armhf
+            runner_arch: ARM64
+            docker_platform: linux/arm/v7
+          - architecture: arm64
+            runner_arch: ARM64
+            docker_platform: linux/arm64
     runs-on:
       - self-hosted
       - linux
-      - "${{ matrix.architecture }}"
-    container: ghcr.io/sigmaris/kodibuilder:bookworm
+      - "${{ matrix.runner_arch }}"
+    container:
+      image: ghcr.io/sigmaris/kodibuilder:bookworm
+      options: --platform ${{ matrix.docker_platform }}
     env:
-      RUNNER_ARCH: "${{ matrix.architecture }}"
+      DEB_ARCH: "${{ matrix.architecture }}"
     steps:
-      - name: Determine DEB_ARCH
-        run: |
-          if [[ "$RUNNER_ARCH" == "ARM" ]]; then
-            DEB_ARCH=armhf
-          elif [[ "$RUNNER_ARCH" == "x64" ]]; then
-            DEB_ARCH=amd64
-          else
-            DEB_ARCH="$(printf '%s' "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')"
-          fi
-          echo DEB_ARCH="$DEB_ARCH" >> $GITHUB_ENV
-
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -61,52 +60,64 @@ jobs:
           path: kodi-build/*.deb
 
   build_deb_addons:
-    name: Build Debian-packaged addons
+    name: build_deb_addon
     needs: build_kodi
     strategy:
       fail-fast: false
       matrix:
+        name:
+          - kodi-screensaver-asteroids
+          - kodi-screensaver-biogenesis
+          - kodi-screensaver-greynetic
+          - kodi-screensaver-pingpong
+          - kodi-screensaver-pyro
+          - kodi-screensaver-shadertoy
+          - kodi-visualization-fishbmc
+          - kodi-visualization-pictureit
+          - kodi-visualization-shadertoy
+          - kodi-visualization-spectrum
+          - kodi-visualization-waveform
+        architecture:
+          - armhf
+          - arm64
         include:
+          - architecture: armhf
+            runner_arch: ARM64
+            docker_platform: linux/arm/v7
+          - architecture: arm64
+            runner_arch: ARM64
+            docker_platform: linux/arm64
           - name: kodi-screensaver-asteroids
             version: '20.1.0+ds1-2'
-            architecture: ARM64
           - name: kodi-screensaver-biogenesis
             version: '20.1.0-2'
-            architecture: ARM64
           - name: kodi-screensaver-greynetic
             version: '20.1.0+ds1-2'
-            architecture: ARM64
           - name: kodi-screensaver-pingpong
             version: '20.1.0+ds1-2'
-            architecture: ARM64
           - name: kodi-screensaver-pyro
             version: '20.1.0-2'
-            architecture: ARM64
           - name: kodi-screensaver-shadertoy
             version: '20.1.0+ds1-2'
-            architecture: ARM64
           - name: kodi-visualization-fishbmc
             version: '20.2.0+ds1-1'
-            architecture: ARM64
           - name: kodi-visualization-pictureit
             version: '20.2.0+ds1-1'
-            architecture: ARM64
           - name: kodi-visualization-shadertoy
             version: '20.3.0+ds1-1'
-            architecture: ARM64
           - name: kodi-visualization-spectrum
             version: '20.2.0+ds1-1'
-            architecture: ARM64
           - name: kodi-visualization-waveform
             version: '20.2.1+ds1-1'
-            architecture: ARM64
     runs-on:
       - self-hosted
       - linux
-      - "${{ matrix.architecture }}"
-    container: ghcr.io/sigmaris/kodibuilder:bookworm
+      - "${{ matrix.runner_arch }}"
+    container:
+      image: ghcr.io/sigmaris/kodibuilder:bookworm
+      options: --platform ${{ matrix.docker_platform }}
     env:
-      RUNNER_ARCH: "${{ matrix.architecture }}"
+      DEB_ARCH: "${{ matrix.architecture }}"
       ADDON_NAME: "${{ matrix.name }}"
       BASE_VERSION: "${{ matrix.version }}"
     steps:
@@ -130,7 +141,7 @@ jobs:
       - name: Install dependencies and build addons
         run: |
           cd kodi-build
-          sudo apt-get -y -u -V install ../artifacts/kodi-debs/kodi-addons-dev_*.deb ../artifacts/kodi-debs/kodi-addons-dev-common_*.deb
+          sudo apt-get -y -u -V install ../artifacts/kodi-debs/kodi-addons-dev_*_${DEB_ARCH}.deb ../artifacts/kodi-debs/kodi-addons-dev-common_*.deb
           ../builder-src/build_deb_addon.sh
 
       - name: Upload packages
@@ -140,13 +151,14 @@ jobs:
           path: kodi-build/*.deb
 
   build_git_addons:
-    name: Build addons from Git
+    name: build_git_addons
     needs: build_kodi
     strategy:
       fail-fast: false
       matrix:
         architecture:
-          - ARM64
+          - armhf
+          - arm64
         addons_regex:
           - 'audiodecoder.* -audiodecoder.(fluidsynth|openmpt|sidplay)'
           - 'screensaver.* -screensaver.(asteroids|biogenesis|greynetic|pingpong|pyro|shadertoy)'
@@ -170,36 +182,41 @@ jobs:
           - '^game\.libretro\.u.*'
           - '^game\.libretro\.v.*'
           - '^game\.libretro\.[w-z].*'
+        include:
+          - architecture: armhf
+            runner_arch: ARM64
+            docker_platform: linux/arm/v7
+          - architecture: arm64
+            runner_arch: ARM64
+            docker_platform: linux/arm64
     runs-on:
       - self-hosted
       - linux
-      - "${{ matrix.architecture }}"
-    container: ghcr.io/sigmaris/kodibuilder:bookworm
+      - "${{ matrix.runner_arch }}"
+    container:
+      image: ghcr.io/sigmaris/kodibuilder:bookworm
+      options: --platform ${{ matrix.docker_platform }}
     env:
-      RUNNER_ARCH: "${{ matrix.architecture }}"
+      DEB_ARCH: "${{ matrix.architecture }}"
       ADDONS_REGEX: "${{ matrix.addons_regex }}"
     steps:
-      - name: Determine DEB_ARCH and ARCH_TRIPLET
+      - name: Determine ARCH_TRIPLET
         run: |
-          case $RUNNER_ARCH in
-            ARM64)
-              DEB_ARCH=arm64
+          case $DEB_ARCH in
+            arm64)
               ARCH_TRIPLET="aarch64-linux-gnu"
               ;;
-            ARM)
-              DEB_ARCH=armhf
+            armhf)
               ARCH_TRIPLET="arm-linux-gnueabihf"
               ;;
-            x64)
-              DEB_ARCH=amd64
+            amd64)
               ARCH_TRIPLET="x86_64-linux-gnu"
               ;;
             *)
-              echo "Unknown RUNNER_ARCH: $RUNNER_ARCH"
+              echo "Unknown DEB_ARCH: $DEB_ARCH"
               exit 1
               ;;
           esac
-          echo DEB_ARCH="$DEB_ARCH" >> $GITHUB_ENV
           echo ARCH_TRIPLET="$ARCH_TRIPLET" >> $GITHUB_ENV
 
       - name: Checkout repository
@@ -229,7 +246,7 @@ jobs:
         run: |
           cd kodi-build
           tar xjf ../artifacts/kodi-config/kodi-config_*_${DEB_ARCH}.tar.bz2
-          sudo apt-get -y -u -V install ../artifacts/kodi-debs/kodi-addons-dev_*.deb ../artifacts/kodi-debs/kodi-addons-dev-common_*.deb
+          sudo apt-get -y -u -V install ../artifacts/kodi-debs/kodi-addons-dev_*_${DEB_ARCH}.deb ../artifacts/kodi-debs/kodi-addons-dev-common_*_all.deb
           ../builder-src/build_git_addons.sh
 
       - name: Upload packages
