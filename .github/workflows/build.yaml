@@ -14,7 +14,7 @@ jobs:
           - arm64
         include:
           - architecture: armhf
-            runner_arch: ARM64
+            runner_arch: ARM
             docker_platform: linux/arm/v7
           - architecture: arm64
             runner_arch: ARM64
@@ -82,7 +82,7 @@ jobs:
           - arm64
         include:
           - architecture: armhf
-            runner_arch: ARM64
+            runner_arch: ARM
             docker_platform: linux/arm/v7
           - architecture: arm64
             runner_arch: ARM64
@@ -184,7 +184,7 @@ jobs:
           - '^game\.libretro\.[w-z].*'
         include:
           - architecture: armhf
-            runner_arch: ARM64
+            runner_arch: ARM
             docker_platform: linux/arm/v7
           - architecture: arm64
             runner_arch: ARM64
