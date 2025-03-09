@@ -2,7 +2,7 @@ name: Build
 on:
   - push
 env:
-  BASE_VERSION: "2:20.1+dfsg-1"
+  BASE_VERSION: "2:21.2+dfsg-1"
 jobs:
   build_kodi:
     name: Build Kodi
@@ -14,23 +14,30 @@ jobs:
           - arm64
         include:
           - architecture: armhf
-            runner_arch: ARM
             docker_platform: linux/arm/v7
+            volumes: '["/tmp/node20:/__e/node20"]'
           - architecture: arm64
-            runner_arch: ARM64
             docker_platform: linux/arm64
-    runs-on:
-      - self-hosted
-      - linux
-      - "${{ matrix.runner_arch }}"
+            volumes: '[]'
+    runs-on: ubuntu-24.04-arm
     container:
-      image: ghcr.io/sigmaris/kodibuilder:bookworm
+      image: ghcr.io/sigmaris/kodibuilder:trixie
       options: --platform ${{ matrix.docker_platform }}
+      volumes: ${{ fromJSON(matrix.volumes) }}
     env:
       DEB_ARCH: "${{ matrix.architecture }}"
     steps:
+      - name: Work around https://github.com/actions/upload-artifact/issues/616
+        if: matrix.architecture == 'armhf'
+        run: |
+          ls -lar /__e/node20
+          curl -Lo /tmp/node.tar.gz https://unofficial-builds.nodejs.org/download/release/v20.18.3/node-v20.18.3-linux-armv6l.tar.gz
+          cd /__e/node20
+          tar -x --strip-components=1 -f /tmp/node.tar.gz
+          ls -lar /__e/node20/bin
+
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: builder-src
 
@@ -43,9 +50,9 @@ jobs:
           ../builder-src/prepare_kodi.sh
 
       - name: Upload configuration
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: kodi-config
+          name: kodi-config-${{ matrix.architecture }}
           path: kodi-build/kodi-config_*.tar.bz2
 
       - name: Compile and package Kodi
@@ -54,9 +61,9 @@ jobs:
           ../builder-src/build_kodi.sh
 
       - name: Upload packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: kodi-debs
+          name: kodi-debs-${{ matrix.architecture }}
           path: kodi-build/*.deb
 
   build_deb_addons:
@@ -82,11 +89,11 @@ jobs:
           - arm64
         include:
           - architecture: armhf
-            runner_arch: ARM
             docker_platform: linux/arm/v7
+            volumes: '["/tmp/node20:/__e/node20"]'
           - architecture: arm64
-            runner_arch: ARM64
             docker_platform: linux/arm64
+            volumes: '[]'
           - name: kodi-screensaver-asteroids
             version: '20.1.0+ds1-2'
           - name: kodi-screensaver-biogenesis
@@ -109,20 +116,27 @@ jobs:
             version: '20.2.0+ds1-1'
           - name: kodi-visualization-waveform
             version: '20.2.1+ds1-1'
-    runs-on:
-      - self-hosted
-      - linux
-      - "${{ matrix.runner_arch }}"
+    runs-on: ubuntu-24.04-arm
     container:
-      image: ghcr.io/sigmaris/kodibuilder:bookworm
+      image: ghcr.io/sigmaris/kodibuilder:trixie
       options: --platform ${{ matrix.docker_platform }}
+      volumes: ${{ fromJSON(matrix.volumes) }}
     env:
       DEB_ARCH: "${{ matrix.architecture }}"
       ADDON_NAME: "${{ matrix.name }}"
       BASE_VERSION: "${{ matrix.version }}"
     steps:
+      - name: Work around https://github.com/actions/upload-artifact/issues/616
+        if: matrix.architecture == 'armhf'
+        run: |
+          ls -lar /__e/node20
+          curl -Lo /tmp/node.tar.gz https://unofficial-builds.nodejs.org/download/release/v20.18.3/node-v20.18.3-linux-armv6l.tar.gz
+          cd /__e/node20
+          tar -x --strip-components=1 -f /tmp/node.tar.gz
+          ls -lar /__e/node20/bin
+
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: builder-src
 
@@ -133,9 +147,9 @@ jobs:
           cd kodi-build
 
       - name: Download kodi-debs artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: kodi-debs
+          name: kodi-debs-${{ matrix.architecture }}
           path: artifacts/kodi-debs
 
       - name: Install dependencies and build addons
@@ -145,9 +159,9 @@ jobs:
           ../builder-src/build_deb_addon.sh
 
       - name: Upload packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: deb-addons
+          name: deb-addons-${{ matrix.architecture }}
           path: kodi-build/*.deb
 
   build_git_addons:
@@ -184,22 +198,29 @@ jobs:
           - '^game\.libretro\.[w-z].*'
         include:
           - architecture: armhf
-            runner_arch: ARM
             docker_platform: linux/arm/v7
+            volumes: '["/tmp/node20:/__e/node20"]'
           - architecture: arm64
-            runner_arch: ARM64
             docker_platform: linux/arm64
-    runs-on:
-      - self-hosted
-      - linux
-      - "${{ matrix.runner_arch }}"
+            volumes: '[]'
+    runs-on: ubuntu-24.04-arm
     container:
-      image: ghcr.io/sigmaris/kodibuilder:bookworm
+      image: ghcr.io/sigmaris/kodibuilder:trixie
       options: --platform ${{ matrix.docker_platform }}
+      volumes: ${{ fromJSON(matrix.volumes) }}
     env:
       DEB_ARCH: "${{ matrix.architecture }}"
       ADDONS_REGEX: "${{ matrix.addons_regex }}"
     steps:
+      - name: Work around https://github.com/actions/upload-artifact/issues/616
+        if: matrix.architecture == 'armhf'
+        run: |
+          ls -lar /__e/node20
+          curl -Lo /tmp/node.tar.gz https://unofficial-builds.nodejs.org/download/release/v20.18.3/node-v20.18.3-linux-armv6l.tar.gz
+          cd /__e/node20
+          tar -x --strip-components=1 -f /tmp/node.tar.gz
+          ls -lar /__e/node20/bin
+
       - name: Determine ARCH_TRIPLET
         run: |
           case $DEB_ARCH in
@@ -220,7 +241,7 @@ jobs:
           echo ARCH_TRIPLET="$ARCH_TRIPLET" >> $GITHUB_ENV
 
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: builder-src
 
@@ -231,15 +252,15 @@ jobs:
           cd kodi-build
 
       - name: Download kodi-config artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: kodi-config
+          name: kodi-config-${{ matrix.architecture }}
           path: artifacts/kodi-config
 
       - name: Download kodi-debs artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: kodi-debs
+          name: kodi-debs-${{ matrix.architecture }}
           path: artifacts/kodi-debs
 
       - name: Install dependencies and build addons
@@ -250,7 +271,7 @@ jobs:
           ../builder-src/build_git_addons.sh
 
       - name: Upload packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: git-addon-debs
+          name: git-addon-debs-${{ matrix.architecture }}
           path: kodi-build/*.deb
