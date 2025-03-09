@@ -31,12 +31,6 @@ def main(ctx):
         deb_visualizations_exclude = "|".join([name for (name, _version) in DEB_VISUALIZATIONS])
         deb_screensavers_exclude = "|".join([name for (name, _version) in DEB_SCREENSAVERS])
         pipelines.extend([
-            deb_addons_pipeline(arch, "rebuild_deb_screensaver_addons", [
-                ("kodi-screensaver-{}".format(name), version) for (name, version) in DEB_SCREENSAVERS
-            ]),
-            deb_addons_pipeline(arch, "rebuild_deb_visualization_addons", [
-                ("kodi-visualization-{}".format(name), version) for (name, version) in DEB_VISUALIZATIONS
-            ]),
             git_addons_pipeline(
                 arch, base_version, artifact_prefix, "build_audiodecoder_addons", "audiodecoder.* -audiodecoder.(fluidsynth|openmpt|sidplay)"
             ),
@@ -280,86 +274,6 @@ def git_addons_pipeline(drone_arch, base_version, artifact_prefix, job_id, regex
                     ]
                 },
                 "depends_on": ["build_addons"],
-                "when": {
-                    "event": "tag",
-                },
-            },
-        ],
-    }
-
-
-def deb_addons_pipeline(drone_arch, job_id, packages):
-    docker_img = "ghcr.io/sigmaris/kodibuilder:bookworm"
-    return {
-        "kind": "pipeline",
-        "type": "docker",
-        "name": job_id,
-        "platform": {
-            "os": "linux",
-            "arch": drone_arch,
-        },
-        "workspace": {
-            "base": "/drone",
-            "path": "builder-src",
-        },
-        "trigger": {
-            "ref": [
-                "refs/heads/*",
-                "refs/tags/*",
-            ]
-        },
-        "clone": {
-            "depth": 1
-        },
-        "steps": [
-            # Rebuild package
-            {
-                "name": "build_%s" % addon_name,
-                "image": docker_img,
-                "environment": dict(
-                    ADDON_NAME=addon_name,
-                    BASE_VERSION=addon_version,
-                ),
-                "commands": [
-                    "mkdir -p /drone/kodi-build",
-                    "cd /drone/kodi-build",
-                    "apt-get -y build-dep '%s=%s'" % (addon_name, addon_version),
-                    "../builder-src/build_deb_addon.sh",
-                ],
-                "depends_on": []
-            }
-            for (addon_name, addon_version) in packages
-        ] + [
-            # Publish addons to filebucket
-            {
-                "name": "publish_addons",
-                "image": docker_img,
-                "environment": FILEBUCKET_ENV,
-                "commands": [
-                    "cd /drone/kodi-build",
-                    "/drone/builder-src/upload_artifacts.sh *.deb",
-                ],
-                "depends_on": ["build_%s" % addon_name for (addon_name, _version) in packages],
-            },
-
-            # Upload artifacts to Github release for tag builds
-            {
-                "name": "release_addons",
-                "image": "ghcr.io/sigmaris/drone-github-release:latest",
-                "settings": {
-                    "api_key": {
-                        "from_secret": "github_token",
-                    },
-                    "files": [
-                        "/drone/kodi-build/*.deb",
-                    ],
-                    "checksum": [
-                        "md5",
-                        "sha1",
-                        "sha256",
-                    ]
-                },
-                "depends_on": ["build_%s" % addon_name for (addon_name, _version) in packages],
                 "when": {
                     "event": "tag",
                 },

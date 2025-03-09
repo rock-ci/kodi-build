@@ -66,104 +66,6 @@ jobs:
           name: kodi-debs-${{ matrix.architecture }}
           path: kodi-build/*.deb
 
-  build_deb_addons:
-    name: build_deb_addon
-    needs: build_kodi
-    strategy:
-      fail-fast: false
-      matrix:
-        name:
-          - kodi-screensaver-asteroids
-          - kodi-screensaver-biogenesis
-          - kodi-screensaver-greynetic
-          - kodi-screensaver-pingpong
-          - kodi-screensaver-pyro
-          - kodi-screensaver-shadertoy
-          - kodi-visualization-fishbmc
-          - kodi-visualization-pictureit
-          - kodi-visualization-shadertoy
-          - kodi-visualization-spectrum
-          - kodi-visualization-waveform
-        architecture:
-          - armhf
-          - arm64
-        include:
-          - architecture: armhf
-            docker_platform: linux/arm/v7
-            volumes: '["/tmp/node20:/__e/node20"]'
-          - architecture: arm64
-            docker_platform: linux/arm64
-            volumes: '[]'
-          - name: kodi-screensaver-asteroids
-            version: '20.1.0+ds1-2'
-          - name: kodi-screensaver-biogenesis
-            version: '20.1.0-2'
-          - name: kodi-screensaver-greynetic
-            version: '20.1.0+ds1-2'
-          - name: kodi-screensaver-pingpong
-            version: '20.1.0+ds1-2'
-          - name: kodi-screensaver-pyro
-            version: '20.1.0-2'
-          - name: kodi-screensaver-shadertoy
-            version: '20.1.0+ds1-2'
-          - name: kodi-visualization-fishbmc
-            version: '20.2.0+ds1-1'
-          - name: kodi-visualization-pictureit
-            version: '20.2.0+ds1-1'
-          - name: kodi-visualization-shadertoy
-            version: '20.3.0+ds1-1'
-          - name: kodi-visualization-spectrum
-            version: '20.2.0+ds1-1'
-          - name: kodi-visualization-waveform
-            version: '20.2.1+ds1-1'
-    runs-on: ubuntu-24.04-arm
-    container:
-      image: ghcr.io/sigmaris/kodibuilder:trixie
-      options: --platform ${{ matrix.docker_platform }}
-      volumes: ${{ fromJSON(matrix.volumes) }}
-    env:
-      DEB_ARCH: "${{ matrix.architecture }}"
-      ADDON_NAME: "${{ matrix.name }}"
-      BASE_VERSION: "${{ matrix.version }}"
-    steps:
-      - name: Work around https://github.com/actions/upload-artifact/issues/616
-        if: matrix.architecture == 'armhf'
-        run: |
-          ls -lar /__e/node20
-          curl -Lo /tmp/node.tar.gz https://unofficial-builds.nodejs.org/download/release/v20.18.3/node-v20.18.3-linux-armv6l.tar.gz
-          cd /__e/node20
-          tar -x --strip-components=1 -f /tmp/node.tar.gz
-          ls -lar /__e/node20/bin
-
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          path: builder-src
-
-      - name: Create build directory
-        run: |
-          rm -rf kodi-build
-          mkdir -p kodi-build/artifacts
-          cd kodi-build
-
-      - name: Download kodi-debs artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: kodi-debs-${{ matrix.architecture }}
-          path: artifacts/kodi-debs
-
-      - name: Install dependencies and build addons
-        run: |
-          cd kodi-build
-          sudo apt-get -y -u -V install ../artifacts/kodi-debs/kodi-addons-dev_*_${DEB_ARCH}.deb ../artifacts/kodi-debs/kodi-addons-dev-common_*.deb
-          ../builder-src/build_deb_addon.sh
-
-      - name: Upload packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: deb-addons-${{ matrix.architecture }}
-          path: kodi-build/*.deb
-
   build_git_addons:
     name: build_git_addons
     needs: build_kodi
@@ -173,29 +75,29 @@ jobs:
         architecture:
           - armhf
           - arm64
-        addons_regex:
-          - 'audiodecoder.* -audiodecoder.(fluidsynth|openmpt|sidplay)'
-          - 'screensaver.* -screensaver.(asteroids|biogenesis|greynetic|pingpong|pyro|shadertoy)'
-          - 'visualization.* -visualization.(fishbmc|pictureit|shadertoy|spectrum|waveform)'
-          - 'vfs.* -vfs.(libarchive|sftp)'
-          - '^game\.libretro\.[0-9].*'
-          - '^game\.libretro\.a.*'
-          - '^game\.libretro\.b.*'
-          - '^game\.libretro\.c.*'
-          - '^game\.libretro\.[d-e].*'
-          - '^game\.libretro\.f.*'
-          - '^game\.libretro\.[g-l].*'
-          - '^game\.libretro\.ma.*'
-          - '^game\.libretro\.m[b-z].*'
-          - '^game\.libretro\.n.*'
-          - '^game\.libretro\.o.*'
-          - '^game\.libretro\.p.*'
-          - '^game\.libretro\.[q-r].*'
-          - '^game\.libretro\.s.*'
-          - '^game\.libretro\.t.*'
-          - '^game\.libretro\.u.*'
-          - '^game\.libretro\.v.*'
-          - '^game\.libretro\.[w-z].*'
+        addons_job:
+          - audiodecoders
+          - screensavers
+          - visualizations
+          - vfs
+          - games-0-9
+          - games-a
+          - games-b
+          - games-c
+          - games-d-e
+          - games-f
+          - games-g-l
+          - games-mame
+          - games-m
+          - games-n
+          - games-o
+          - games-p
+          - games-q-r
+          - games-s
+          - games-t
+          - games-u
+          - games-v
+          - games-w-z
         include:
           - architecture: armhf
             docker_platform: linux/arm/v7
@@ -203,6 +105,50 @@ jobs:
           - architecture: arm64
             docker_platform: linux/arm64
             volumes: '[]'
+          - addons_job: audiodecoders
+            addons_regex: 'audiodecoder.* -audiodecoder.(fluidsynth|openmpt|sidplay)'
+          - addons_job: screensavers
+            addons_regex: 'screensaver.* -screensaver.(asteroids|biogenesis|greynetic|pingpong|pyro|shadertoy)'
+          - addons_job: visualizations
+            addons_regex: 'visualization.* -visualization.(fishbmc|pictureit|shadertoy|spectrum|waveform)'
+          - addons_job: vfs
+            addons_regex: 'vfs.* -vfs.(libarchive|sftp)'
+          - addons_job: games-0-9
+            addons_regex: '^game\.libretro\.[0-9].*'
+          - addons_job: games-a
+            addons_regex: '^game\.libretro\.a.*'
+          - addons_job: games-b
+            addons_regex: '^game\.libretro\.b.*'
+          - addons_job: games-c
+            addons_regex: '^game\.libretro\.c.*'
+          - addons_job: games-d-e
+            addons_regex: '^game\.libretro\.[d-e].*'
+          - addons_job: games-f
+            addons_regex: '^game\.libretro\.f.*'
+          - addons_job: games-g-l
+            addons_regex: '^game\.libretro\.[g-l].*'
+          - addons_job: games-mame
+            addons_regex: '^game\.libretro\.ma.*'
+          - addons_job: games-m
+            addons_regex: '^game\.libretro\.m[b-z].*'
+          - addons_job: games-n
+            addons_regex: '^game\.libretro\.n.*'
+          - addons_job: games-o
+            addons_regex: '^game\.libretro\.o.*'
+          - addons_job: games-p
+            addons_regex: '^game\.libretro\.p.*'
+          - addons_job: games-q-r
+            addons_regex: '^game\.libretro\.[q-r].*'
+          - addons_job: games-s
+            addons_regex: '^game\.libretro\.s.*'
+          - addons_job: games-t
+            addons_regex: '^game\.libretro\.t.*'
+          - addons_job: games-u
+            addons_regex: '^game\.libretro\.u.*'
+          - addons_job: games-v
+            addons_regex: '^game\.libretro\.v.*'
+          - addons_job: games-w-z
+            addons_regex: '^game\.libretro\.[w-z].*'
     runs-on: ubuntu-24.04-arm
     container:
       image: ghcr.io/sigmaris/kodibuilder:trixie
@@ -273,5 +219,5 @@ jobs:
       - name: Upload packages
         uses: actions/upload-artifact@v4
         with:
-          name: git-addon-debs-${{ matrix.architecture }}
+          name: git-addon-debs-${{ matrix.addons_job }}-${{ matrix.architecture }}
           path: kodi-build/*.deb

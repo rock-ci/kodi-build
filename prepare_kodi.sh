@@ -28,21 +28,14 @@ echo "************************"
 cat << EOF | tee debian/changelog.new
 kodi (10:${UPSTREAM_VER}-${OUR_REV}) unstable; urgency=medium
 
-  * Use APP_RENDER_SYSTEM=gles instead of desktop OpenGL
+  * Support Video4Linux2 hardware deinterlacing
+  * Support Video4Linux2 stateless video decode acceleration
 
  -- Hugh Cole-Baker <sigmaris@gmail.com>  $(date '+%a, %d %b %Y %H:%M:%S %z')
 
 EOF
 cat debian/changelog >> debian/changelog.new
 mv debian/changelog.new debian/changelog
-
-
-echo "********************************"
-echo "** Patching APP_RENDER_SYSTEM **"
-echo "********************************"
-
-sed -i -e "s/-DAPP_RENDER_SYSTEM=gl /-DAPP_RENDER_SYSTEM=gles /g" debian/rules
-grep APP_RENDER_SYSTEM=gles debian/rules
 
 echo "***************************"
 echo "** Applying kodi patches **"
