@@ -2,7 +2,7 @@ name: Build
 on:
   - push
 env:
-  BASE_VERSION: "2:21.2+dfsg-1"
+  BASE_VERSION: "2:21.2+dfsg-4"
 jobs:
   build_kodi:
     name: Build Kodi
